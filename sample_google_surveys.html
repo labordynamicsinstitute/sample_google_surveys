@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Lars Vilhuber" />
+
+
+<title>Using Google Consumer Surveys</title>
+
+<script src="sample_google_surveys_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="sample_google_surveys_files/bootstrap-3.3.1/css/spacelab.min.css" rel="stylesheet" />
+<script src="sample_google_surveys_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="sample_google_surveys_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="sample_google_surveys_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; background-color: #dddddd; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { font-weight: bold; }
+code > span.dt { color: #800000; }
+code > span.dv { color: #0000ff; }
+code > span.bn { color: #0000ff; }
+code > span.fl { color: #800080; }
+code > span.ch { color: #ff00ff; }
+code > span.st { color: #dd0000; }
+code > span.co { color: #808080; font-style: italic; }
+code > span.al { color: #00ff00; font-weight: bold; }
+code > span.fu { color: #000080; }
+code > span.er { color: #ff0000; font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Using Google Consumer Surveys</h1>
+<h4 class="author"><em>Lars Vilhuber</em></h4>
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#survey-instrument">Survey instrument</a></li>
+<li><a href="#results">Results</a></li>
+<li><a href="#appendix">Appendix</a></li>
+</ul>
+</div>
+
+<p>This document reports a simple experiment using Google Consumer Surveys.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># define basic parameters</span>
+price_quoted &lt;-<span class="st"> </span><span class="dv">3</span>
+price_minimum &lt;-<span class="st"> </span><span class="fl">0.1</span>
+budget &lt;-<span class="st"> </span><span class="dv">500</span>
+coupon &lt;-<span class="st"> </span><span class="dv">75</span>
+result_file &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Employment and search.xls&quot;</span>)</code></pre>
+<div id="survey-instrument" class="section level2">
+<h2>Survey instrument</h2>
+<p>We based our survey instrument on the primary labor force question on the CPS, somewhat modified:</p>
+<p><img src="Selection_043.png" alt="question 1" /></p>
+<p>We followed up for all non-employed (all those not responding with “Yes”“) with a question on search intensity that was not based on the CPS:</p>
+<p><img src="Selection_044.png" alt="question 1" /></p>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+<p>Google first ran a test (which resulted in being 4 responses) to assess how much to charge us. Google claims that prices are between $0.1 and $3. In our case, the quoted price was $3 per response, and our budget was $500 (although we were offered a one-time coupon valued at $75. We thus requested 191 cases. Once accepted, Google posted the survey, targetting the “general population in the United States on the Google Consumer Survey publisher network”.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># get overview data</span>
+xls_overview &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_file,<span class="dt">sheet=</span><span class="dv">1</span>)
+xls_topline &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_file,<span class="dt">sheet=</span><span class="dv">2</span>)
+xls_data &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_file,<span class="dt">sheet=</span><span class="dv">3</span>)</code></pre>
+<p>To our initial surprise, we had received 461 cases. As it turns out, since our labor force question served as a “screener”, we were only charged for complete questions, i.e., responses that had completed both Q1 and Q2 of which we had obtained 192. Thus, the final response was</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Question.text</th>
+<th align="right">Response.count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Last week, did you do ANY work for pay?</td>
+<td align="right">461</td>
+</tr>
+<tr class="even">
+<td align="left">If you are not working, how many jobs did you apply for (by email, website, letter, in person, etc.) last week?</td>
+<td align="right">192</td>
+</tr>
+</tbody>
+</table>
+<p>From this, we can compute a few statistics of interest.</p>
+<pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>),<span class="dt">row.names =</span> <span class="kw">c</span>(<span class="st">&quot;Employment-Population Rate&quot;</span>,<span class="st">&quot;Unemployment rate&quot;</span>,<span class="st">&quot;OLF rate&quot;</span>))
+results[,<span class="dv">1</span>:<span class="dv">2</span>] &lt;-<span class="st"> </span><span class="dv">0</span>
+<span class="kw">names</span>(results) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Google&quot;</span>,<span class="st">&quot;BLS&quot;</span>)
+<span class="co"># define OLF, pop, unemployed, employed</span>
+pop &lt;-<span class="st"> </span>xls_overview[<span class="dv">1</span>,<span class="kw">c</span>(<span class="st">&quot;Response.count&quot;</span>)]
+nonemp &lt;-<span class="st"> </span>xls_overview[<span class="dv">2</span>,<span class="kw">c</span>(<span class="st">&quot;Response.count&quot;</span>)]
+employed &lt;-<span class="st"> </span>pop -<span class="st"> </span>nonemp
+olfind &lt;-<span class="st"> </span>xls_data$Question..<span class="fl">2.</span>Answer==<span class="st">&quot;0 (I am not looking for work)&quot;</span>
+olf &lt;-<span class="st"> </span><span class="kw">nrow</span>(xls_data[olfind,])
+google.dates &lt;-<span class="st"> </span><span class="kw">c</span>(
+  <span class="kw">min</span>(<span class="kw">as.POSIXct</span>(<span class="kw">strptime</span>(xls_data[,<span class="st">&quot;Time..UTC.&quot;</span>],<span class="st">&quot;%Y-%m-%d %H:%M:%S&quot;</span>),<span class="dt">tz=</span><span class="st">&quot;UTC&quot;</span>)),
+  <span class="kw">max</span>(<span class="kw">as.POSIXct</span>(<span class="kw">strptime</span>(xls_data[,<span class="st">&quot;Time..UTC.&quot;</span>],<span class="st">&quot;%Y-%m-%d %H:%M:%S&quot;</span>),<span class="dt">tz=</span><span class="st">&quot;UTC&quot;</span>))
+  )
+<span class="co"># now compute stats</span>
+results[<span class="st">&quot;Employment-Population Rate&quot;</span>,<span class="dv">1</span>] &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">round</span>(employed*<span class="dv">100</span>/pop,<span class="dv">2</span>)
+results[<span class="st">&quot;Unemployment rate&quot;</span>,<span class="dv">1</span>] &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">round</span>((nonemp-olf)*<span class="dv">100</span>/employed,<span class="dv">2</span>)
+results[<span class="st">&quot;OLF rate&quot;</span>,<span class="dv">1</span>] &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">round</span>(olf*<span class="dv">100</span>/pop,<span class="dv">2</span>)</code></pre>
+<p>which we measured between 2016-01-08 11:10:46 and 2016-01-08 20:20:05.</p>
+<p>For comparison purposes, we obtained the BLS unemployment rate and employment-population ratio from FRED:</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># define the series of interest</span>
+fred_unemployment &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;UNRATENSA&quot;</span>)
+fred_unemployment20 &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;LNU04000024&quot;</span>)
+fred_emppop_all   &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;LNU02300000&quot;</span>)
+fred_emppop_men   &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;LNU02300001&quot;</span>)
+fred_emppop_women &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;LNU02300002&quot;</span>)
+fred_olf_count    &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;LNU05000000&quot;</span>)
+fred_pop_count    &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;CNP16OV&quot;</span>)
+
+<span class="co">#bls.urate &lt;- get(getSymbols(fred_unemployment,src=&#39;FRED&#39;))</span>
+bls.urate20 &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">getSymbols</span>(fred_unemployment20,<span class="dt">src=</span><span class="st">&#39;FRED&#39;</span>))
+bls.emppop_all &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">getSymbols</span>(fred_emppop_all,<span class="dt">src=</span><span class="st">&#39;FRED&#39;</span>))
+<span class="co">#bls.emppop_men &lt;- get(getSymbols(fred_emppop_men,src=&#39;FRED&#39;))</span>
+<span class="co">#bls.emppop_women &lt;- get(getSymbols(fred_emppop_women,src=&#39;FRED&#39;))</span>
+<span class="co">#</span>
+<span class="co"># Compute the OLF rate</span>
+cnt.olf &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">getSymbols</span>(fred_olf_count,<span class="dt">src=</span><span class="st">&#39;FRED&#39;</span>))
+cnt.pop &lt;-<span class="st"> </span><span class="kw">get</span>(<span class="kw">getSymbols</span>(fred_pop_count,<span class="dt">src=</span><span class="st">&#39;FRED&#39;</span>))
+bls.olf_rate &lt;-<span class="st"> </span>cnt.olf*<span class="dv">100</span>/cnt.pop
+<span class="co">#</span>
+<span class="co"># attach the closest value - this might change over time, but that&#39;s fine.</span>
+<span class="co"># found at http://stackoverflow.com/questions/8186960/finding-the-most-recent-observation-earlier-than-a-certain-timestamp-with-xts</span>
+<span class="co"># For emppop ratio, use all - we will break it out by gender later</span>
+results[<span class="st">&quot;Employment-Population Rate&quot;</span>,<span class="dv">2</span>] &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">round</span>(bls.emppop_all[<span class="kw">findInterval</span>(google.dates[<span class="dv">1</span>],<span class="kw">index</span>(bls.emppop_all)),]
+,<span class="dv">2</span>)
+results[<span class="st">&quot;Unemployment rate&quot;</span>,<span class="dv">2</span>] &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">round</span>(bls.urate20[<span class="kw">findInterval</span>(google.dates[<span class="dv">1</span>],<span class="kw">index</span>(bls.urate20)),],<span class="dv">2</span>)
+results[<span class="st">&quot;OLF rate&quot;</span>,<span class="dv">2</span>] &lt;-<span class="st"> </span>
+<span class="st">  </span><span class="kw">round</span>(bls.olf_rate[<span class="kw">findInterval</span>(google.dates[<span class="dv">1</span>],<span class="kw">index</span>(bls.olf_rate)),],<span class="dv">2</span>)</code></pre>
+<p>The final (unweighted) result is then as follows (note: the BLS numbers won’t add up quite to 100, since they stem from different series):</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Google</th>
+<th align="right">BLS</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Employment-Population Rate</td>
+<td align="right">58.35</td>
+<td align="right">59.40</td>
+</tr>
+<tr class="even">
+<td align="left">Unemployment rate</td>
+<td align="right">16.36</td>
+<td align="right">4.50</td>
+</tr>
+<tr class="odd">
+<td align="left">OLF rate</td>
+<td align="right">32.10</td>
+<td align="right">37.59</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="appendix" class="section level2">
+<h2>Appendix</h2>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># libraries needed</span>
+<span class="kw">library</span>(quantmod) <span class="co"># read FRED</span>
+<span class="kw">library</span>(gdata) <span class="co"># read Excel</span>
+<span class="kw">options</span>(<span class="st">&quot;getSymbols.warning4.0&quot;</span>=<span class="ot">FALSE</span>)
+<span class="kw">Sys.info</span>()</code></pre>
+<pre><code>##                                                 sysname 
+##                                                 &quot;Linux&quot; 
+##                                                 release 
+##                                     &quot;3.16.7-29-desktop&quot; 
+##                                                 version 
+## &quot;#1 SMP PREEMPT Fri Oct 23 00:46:04 UTC 2015 (6be6a97)&quot; 
+##                                                nodename 
+##                                              &quot;zotique2&quot; 
+##                                                 machine 
+##                                                &quot;x86_64&quot; 
+##                                                   login 
+##                                              &quot;vilhuber&quot; 
+##                                                    user 
+##                                              &quot;vilhuber&quot; 
+##                                          effective_user 
+##                                              &quot;vilhuber&quot;</code></pre>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
