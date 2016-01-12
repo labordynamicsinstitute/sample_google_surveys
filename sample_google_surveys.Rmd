@@ -1,8 +1,10 @@
 ---
 title: "Using Google Consumer Surveys"
 author: "Lars Vilhuber"
-output: 
-  html_document: 
+output:
+  pdf_document:
+    toc: yes
+  html_document:
     fig_height: 3
     fig_width: 4
     highlight: kate
