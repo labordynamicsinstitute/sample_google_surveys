@@ -1,4 +1,4 @@
 # A sample Google survey for unemployment
 We ran a simple Google Consumer Survey, comparing to traditional labor economics statistics.
 
-See (sample_google_surveys.Rmd) for the source file, and (sample_google_surveys.html) for the rendered HTML file.
+See [the Rmd source file](sample_google_surveys.Rmd), the [rendered HTML](sample_google_surveys.html), the [intermediate Markdown file](sample_google_surveys.md) (note: tables don't render well), and the [PDF version](sample_google_surveys.md).
