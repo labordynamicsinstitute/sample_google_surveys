@@ -77,19 +77,38 @@ img {
 
 <div id="TOC">
 <ul>
+<li><a href="#abstract">Abstract</a></li>
+<li><a href="#setup">Setup</a></li>
+<li><a href="#cost">Cost</a><ul>
 <li><a href="#survey-instrument">Survey instrument</a></li>
 <li><a href="#results">Results</a></li>
+<li><a href="#some-preliminary-conclusions">Some preliminary conclusions</a></li>
 <li><a href="#appendix">Appendix</a></li>
+</ul></li>
 </ul>
 </div>
 
+<div id="abstract" class="section level1">
+<h1>Abstract</h1>
 <p>This document reports a simple experiment using Google Consumer Surveys.</p>
+</div>
+<div id="setup" class="section level1">
+<h1>Setup</h1>
+<p>Running surveys over the internet is very popular. Google Consumer Surveys (<a href="https://www.google.com/insights/consumersurveys/home">www.google.com/insights/consumersurveys</a>) is one of those firms that have jumped into the fray, with prices “starting at 10¢ per complete”. We wondered how useful such rapid surveys are for measuring economic concepts. We created a survey, modeled on the <a href="http://www.census.gov/programs-surveys/cps.html">Current Population Survey</a> (CPS), put it into the field for a limited budget, and assessed the results.</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># define basic parameters</span>
+price_minimum_screen &lt;-<span class="st"> </span><span class="dv">3</span>
+price_multiq &lt;-<span class="dv">1</span>
 price_quoted &lt;-<span class="st"> </span><span class="dv">3</span>
 price_minimum &lt;-<span class="st"> </span><span class="fl">0.1</span>
 budget &lt;-<span class="st"> </span><span class="dv">500</span>
 coupon &lt;-<span class="st"> </span><span class="dv">75</span>
-result_file &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Employment and search.xls&quot;</span>)</code></pre>
+result_file &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Employment and search.xls&quot;</span>)
+survey_start &lt;-<span class="st"> </span><span class="kw">as.difftime</span>(<span class="st">&quot;11:59&quot;</span>,<span class="dt">format=</span><span class="st">&quot;%H:%M&quot;</span>)
+survey_end &lt;-<span class="st"> </span><span class="kw">as.difftime</span>(<span class="st">&quot;20:24&quot;</span>,<span class="dt">format=</span><span class="st">&quot;%H:%M&quot;</span>)</code></pre>
+</div>
+<div id="cost" class="section level1">
+<h1>Cost</h1>
+<p>Google touts that prices are start at $0.1. That is in fact the price for a single-question, non-targeted survey. For up to 10 questions, the price is $1 per completed response. In our case, we applied the CPS model and had a screening question, which leads to a minimum price of $3 per complete response, depending in particular on the incidence rate (a minimum of 5% of respondents must make it through the screener). In our case, the quoted price was $3 per response, and our budget was $500 (although we were offered a one-time coupon valued at $75. We thus requested 191 cases.</p>
 <div id="survey-instrument" class="section level2">
 <h2>Survey instrument</h2>
 <p>We based our survey instrument on the primary labor force question on the CPS, somewhat modified:</p>
@@ -99,12 +118,7 @@ result_file &lt;-<span class="st"> </span><span class="kw">c</span>(<span class=
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
-<p>Google first ran a test (which resulted in being 4 responses) to assess how much to charge us. Google claims that prices are between $0.1 and $3. In our case, the quoted price was $3 per response, and our budget was $500 (although we were offered a one-time coupon valued at $75. We thus requested 191 cases. Once accepted, Google posted the survey, targetting the “general population in the United States on the Google Consumer Survey publisher network”.</p>
-<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># get overview data</span>
-xls_overview &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_file,<span class="dt">sheet=</span><span class="dv">1</span>)
-xls_topline &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_file,<span class="dt">sheet=</span><span class="dv">2</span>)
-xls_data &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_file,<span class="dt">sheet=</span><span class="dv">3</span>)</code></pre>
-<p>To our initial surprise, we had received 461 cases. As it turns out, since our labor force question served as a “screener”, we were only charged for complete questions, i.e., responses that had completed both Q1 and Q2 of which we had obtained 192. Thus, the final response was</p>
+<p>Google first ran a test (which resulted in being 4 responses) to assess how much to charge us. Once accepted, Google posted the survey, targetting the “general population in the United States on the Google Consumer Survey publisher network”. We received 461 cases, of which 192 were “complete”. The entire survey was completed in 8.42 hours. The raw distribution of responses was as follows:</p>
 <table>
 <thead>
 <tr class="header">
@@ -123,28 +137,7 @@ xls_data &lt;-<span class="st"> </span><span class="kw">read.xls</span>(result_f
 </tr>
 </tbody>
 </table>
-<p>From this, we can compute a few statistics of interest.</p>
-<pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">0</span>,<span class="dv">0</span>),<span class="dt">row.names =</span> <span class="kw">c</span>(<span class="st">&quot;Employment-Population Rate&quot;</span>,<span class="st">&quot;Unemployment rate&quot;</span>,<span class="st">&quot;OLF rate&quot;</span>))
-results[,<span class="dv">1</span>:<span class="dv">2</span>] &lt;-<span class="st"> </span><span class="dv">0</span>
-<span class="kw">names</span>(results) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Google&quot;</span>,<span class="st">&quot;BLS&quot;</span>)
-<span class="co"># define OLF, pop, unemployed, employed</span>
-pop &lt;-<span class="st"> </span>xls_overview[<span class="dv">1</span>,<span class="kw">c</span>(<span class="st">&quot;Response.count&quot;</span>)]
-nonemp &lt;-<span class="st"> </span>xls_overview[<span class="dv">2</span>,<span class="kw">c</span>(<span class="st">&quot;Response.count&quot;</span>)]
-employed &lt;-<span class="st"> </span>pop -<span class="st"> </span>nonemp
-olfind &lt;-<span class="st"> </span>xls_data$Question..<span class="fl">2.</span>Answer==<span class="st">&quot;0 (I am not looking for work)&quot;</span>
-olf &lt;-<span class="st"> </span><span class="kw">nrow</span>(xls_data[olfind,])
-google.dates &lt;-<span class="st"> </span><span class="kw">c</span>(
-  <span class="kw">min</span>(<span class="kw">as.POSIXct</span>(<span class="kw">strptime</span>(xls_data[,<span class="st">&quot;Time..UTC.&quot;</span>],<span class="st">&quot;%Y-%m-%d %H:%M:%S&quot;</span>),<span class="dt">tz=</span><span class="st">&quot;UTC&quot;</span>)),
-  <span class="kw">max</span>(<span class="kw">as.POSIXct</span>(<span class="kw">strptime</span>(xls_data[,<span class="st">&quot;Time..UTC.&quot;</span>],<span class="st">&quot;%Y-%m-%d %H:%M:%S&quot;</span>),<span class="dt">tz=</span><span class="st">&quot;UTC&quot;</span>))
-  )
-<span class="co"># now compute stats</span>
-results[<span class="st">&quot;Employment-Population Rate&quot;</span>,<span class="dv">1</span>] &lt;-<span class="st"> </span>
-<span class="st">  </span><span class="kw">round</span>(employed*<span class="dv">100</span>/pop,<span class="dv">2</span>)
-results[<span class="st">&quot;Unemployment rate&quot;</span>,<span class="dv">1</span>] &lt;-<span class="st"> </span>
-<span class="st">  </span><span class="kw">round</span>((nonemp-olf)*<span class="dv">100</span>/employed,<span class="dv">2</span>)
-results[<span class="st">&quot;OLF rate&quot;</span>,<span class="dv">1</span>] &lt;-<span class="st"> </span>
-<span class="st">  </span><span class="kw">round</span>(olf*<span class="dv">100</span>/pop,<span class="dv">2</span>)</code></pre>
-<p>which we measured between 2016-01-08 11:10:46 and 2016-01-08 20:20:05.</p>
+<p>From this, we can compute a few statistics of interest, which we measured between 2016-01-08 11:10:46 and 2016-01-08 20:20:05.</p>
 <p>For comparison purposes, we obtained the BLS unemployment rate and employment-population ratio from FRED:</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># define the series of interest</span>
 fred_unemployment &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;UNRATENSA&quot;</span>)
@@ -204,6 +197,10 @@ results[<span class="st">&quot;OLF rate&quot;</span>,<span class="dv">2</span>] 
 </tbody>
 </table>
 </div>
+<div id="some-preliminary-conclusions" class="section level2">
+<h2>Some preliminary conclusions</h2>
+<p>We probably could have obtained a more informative and cheaper response if not using the labor force question as a screener. Rather, if we had requested search intensity of everybody, regardless of labor force status, our budget would have allowed for 575 responses, <em>and</em> given us information on on-the-job search.</p>
+</div>
 <div id="appendix" class="section level2">
 <h2>Appendix</h2>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="co"># libraries needed</span>
@@ -227,6 +224,7 @@ results[<span class="st">&quot;OLF rate&quot;</span>,<span class="dv">2</span>] 
 ##                                              &quot;vilhuber&quot; 
 ##                                          effective_user 
 ##                                              &quot;vilhuber&quot;</code></pre>
+</div>
 </div>
 
 

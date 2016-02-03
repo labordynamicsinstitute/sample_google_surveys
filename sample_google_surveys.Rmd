@@ -14,7 +14,12 @@ output:
     toc: yes
 ---
 
+# Abstract
 This document reports a simple experiment using Google Consumer Surveys. 
+
+# Setup
+Running surveys over the internet is very popular. Google Consumer Surveys ([www.google.com/insights/consumersurveys](https://www.google.com/insights/consumersurveys/home)) is one of those firms that have jumped into the fray, with prices "starting at 10¢ per complete". We wondered how useful such rapid surveys are for measuring economic concepts. We created a survey, modeled on the [Current Population Survey](http://www.census.gov/programs-surveys/cps.html) (CPS), put it into the field for a limited budget, and assessed the results.
+
 
 ```{r silent_parms, echo=FALSE, include=FALSE}
 # libraries needed
@@ -26,13 +31,23 @@ Sys.info()
 
 ```{r parms}
 # define basic parameters
+price_minimum_screen <- 3
+price_multiq <-1
 price_quoted <- 3
 price_minimum <- 0.1
 budget <- 500
 coupon <- 75
 result_file <- c("Employment and search.xls")
+survey_start <- as.difftime("11:59",format="%H:%M")
+survey_end <- as.difftime("20:24",format="%H:%M")
 
 ```
+# Cost
+Google touts that prices are start at $`r price_minimum`. That is in fact the price for a single-question, non-targeted survey. For up to 10 questions, the price is $`r price_multiq` per completed response.
+In our case, we applied the CPS model and had a screening question, which leads to a minimum price of $`r price_minimum_screen` per complete response, depending in particular on the incidence rate (a minimum of 5% of respondents must make it through the screener).  In our case, the quoted price was $`r price_quoted` per response, and our budget was $`r budget` (although we were offered a one-time coupon valued at $`r coupon`. We thus requested  `r floor((budget + coupon)/price_quoted)` cases.
+
+
+
 Survey instrument
 -----------------
 We based our survey instrument on the primary labor force question on the CPS, somewhat modified:
@@ -45,22 +60,20 @@ We followed up for all non-employed (all those not responding with "Yes"") with 
 
 Results
 -------
-Google first ran a test (which resulted in being 4 responses) to assess how much to charge us. Google claims that prices are between $`r price_minimum` and $`r price_quoted`. In our case, the quoted price was $`r price_quoted` per response, and our budget was $`r budget` (although we were offered a one-time coupon valued at $`r coupon`. We thus requested  `r floor((budget + coupon)/price_quoted)` cases. Once accepted, Google posted the survey, targetting the "general population in the United States on the Google Consumer Survey publisher network". 
-
-```{r read_xls}
+```{r read_xls,echo=FALSE}
 # get overview data
 xls_overview <- read.xls(result_file,sheet=1)
 xls_topline <- read.xls(result_file,sheet=2)
 xls_data <- read.xls(result_file,sheet=3)
 ```
-To our initial surprise, we had received `r xls_overview[1,c("Response.count")]` cases. As it turns out, since our labor force question served as a "screener", we were only charged for complete questions, i.e., responses that had completed both Q1 and Q2 of which we had obtained `r xls_overview[2,c("Response.count")]`. Thus, the final response was
+Google first ran a test (which resulted in being 4 responses) to assess how much to charge us.  Once accepted, Google posted the survey, targetting the "general population in the United States on the Google Consumer Survey publisher network". We received `r xls_overview[1,c("Response.count")]` cases, of which  `r xls_overview[2,c("Response.count")]` were "complete". The entire survey was completed in `r round(as.difftime(survey_end-survey_start, units="hours"),2) ` hours. The raw distribution of responses was as follows:
+
 
 ```{r responses,results='asis', echo=FALSE}
 knitr::kable(xls_overview[,c("Question.text","Response.count")])
 ```
 
-From this, we can compute a few statistics of interest. 
-```{r cps_stats}
+```{r cps_stats, echo=FALSE}
 results <- data.frame(c(0,0,0),row.names = c("Employment-Population Rate","Unemployment rate","OLF rate"))
 results[,1:2] <- 0
 names(results) <- c("Google","BLS")
@@ -82,7 +95,7 @@ results["Unemployment rate",1] <-
 results["OLF rate",1] <- 
   round(olf*100/pop,2)
 ```
-which we measured between `r google.dates[1]` and `r google.dates[2]`.
+From this, we can compute a few statistics of interest, which we measured between `r google.dates[1]` and `r google.dates[2]`.
 
 For comparison purposes, we obtained the BLS unemployment rate and employment-population ratio from FRED:
 ```{r get_fred, cache=TRUE}
@@ -125,6 +138,9 @@ The final (unweighted) result is then as follows (note: the BLS numbers won't ad
 knitr::kable(results)
 ```
 
+Some preliminary conclusions
+----------------------------
+We probably could have obtained a more informative and cheaper response if not using the labor force question as a screener. Rather, if we had requested search intensity of everybody, regardless of labor force status, our budget would have allowed for `r floor((budget + coupon)/price_multiq)` responses, *and* given us information on on-the-job search. 
 
 Appendix
 --------

@@ -1,19 +1,34 @@
 # Using Google Consumer Surveys
 Lars Vilhuber  
 
+# Abstract
 This document reports a simple experiment using Google Consumer Surveys. 
+
+# Setup
+Running surveys over the internet is very popular. Google Consumer Surveys ([www.google.com/insights/consumersurveys](https://www.google.com/insights/consumersurveys/home)) is one of those firms that have jumped into the fray, with prices "starting at 10¢ per complete". We wondered how useful such rapid surveys are for measuring economic concepts. We created a survey, modeled on the [Current Population Survey](http://www.census.gov/programs-surveys/cps.html) (CPS), put it into the field for a limited budget, and assessed the results.
+
 
 
 
 
 ```r
 # define basic parameters
+price_minimum_screen <- 3
+price_multiq <-1
 price_quoted <- 3
 price_minimum <- 0.1
 budget <- 500
 coupon <- 75
 result_file <- c("Employment and search.xls")
+survey_start <- as.difftime("11:59",format="%H:%M")
+survey_end <- as.difftime("20:24",format="%H:%M")
 ```
+# Cost
+Google touts that prices are start at $0.1. That is in fact the price for a single-question, non-targeted survey. For up to 10 questions, the price is $1 per completed response.
+In our case, we applied the CPS model and had a screening question, which leads to a minimum price of $3 per complete response, depending in particular on the incidence rate (a minimum of 5% of respondents must make it through the screener).  In our case, the quoted price was $3 per response, and our budget was $500 (although we were offered a one-time coupon valued at $75. We thus requested  191 cases.
+
+
+
 Survey instrument
 -----------------
 We based our survey instrument on the primary labor force question on the CPS, somewhat modified:
@@ -26,16 +41,9 @@ We followed up for all non-employed (all those not responding with "Yes"") with 
 
 Results
 -------
-Google first ran a test (which resulted in being 4 responses) to assess how much to charge us. Google claims that prices are between $0.1 and $3. In our case, the quoted price was $3 per response, and our budget was $500 (although we were offered a one-time coupon valued at $75. We thus requested  191 cases. Once accepted, Google posted the survey, targetting the "general population in the United States on the Google Consumer Survey publisher network". 
 
+Google first ran a test (which resulted in being 4 responses) to assess how much to charge us.  Once accepted, Google posted the survey, targetting the "general population in the United States on the Google Consumer Survey publisher network". We received 461 cases, of which  192 were "complete". The entire survey was completed in 8.42 hours. The raw distribution of responses was as follows:
 
-```r
-# get overview data
-xls_overview <- read.xls(result_file,sheet=1)
-xls_topline <- read.xls(result_file,sheet=2)
-xls_data <- read.xls(result_file,sheet=3)
-```
-To our initial surprise, we had received 461 cases. As it turns out, since our labor force question served as a "screener", we were only charged for complete questions, i.e., responses that had completed both Q1 and Q2 of which we had obtained 192. Thus, the final response was
 
 
 Question.text                                                                                                      Response.count
@@ -43,31 +51,8 @@ Question.text                                                                   
 Last week, did you do ANY work for pay?                                                                                       461
 If you are not working, how many jobs did you apply for (by email, website, letter, in person, etc.) last week?               192
 
-From this, we can compute a few statistics of interest. 
 
-```r
-results <- data.frame(c(0,0,0),row.names = c("Employment-Population Rate","Unemployment rate","OLF rate"))
-results[,1:2] <- 0
-names(results) <- c("Google","BLS")
-# define OLF, pop, unemployed, employed
-pop <- xls_overview[1,c("Response.count")]
-nonemp <- xls_overview[2,c("Response.count")]
-employed <- pop - nonemp
-olfind <- xls_data$Question..2.Answer=="0 (I am not looking for work)"
-olf <- nrow(xls_data[olfind,])
-google.dates <- c(
-  min(as.POSIXct(strptime(xls_data[,"Time..UTC."],"%Y-%m-%d %H:%M:%S"),tz="UTC")),
-  max(as.POSIXct(strptime(xls_data[,"Time..UTC."],"%Y-%m-%d %H:%M:%S"),tz="UTC"))
-  )
-# now compute stats
-results["Employment-Population Rate",1] <- 
-  round(employed*100/pop,2)
-results["Unemployment rate",1] <- 
-  round((nonemp-olf)*100/employed,2)
-results["OLF rate",1] <- 
-  round(olf*100/pop,2)
-```
-which we measured between 2016-01-08 11:10:46 and 2016-01-08 20:20:05.
+From this, we can compute a few statistics of interest, which we measured between 2016-01-08 11:10:46 and 2016-01-08 20:20:05.
 
 For comparison purposes, we obtained the BLS unemployment rate and employment-population ratio from FRED:
 
@@ -113,6 +98,9 @@ Employment-Population Rate     58.35   59.40
 Unemployment rate              16.36    4.50
 OLF rate                       32.10   37.59
 
+Some preliminary conclusions
+----------------------------
+We probably could have obtained a more informative and cheaper response if not using the labor force question as a screener. Rather, if we had requested search intensity of everybody, regardless of labor force status, our budget would have allowed for 575 responses, *and* given us information on on-the-job search. 
 
 Appendix
 --------
